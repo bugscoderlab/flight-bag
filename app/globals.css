@@ -1,0 +1,475 @@
+/* Flight Planning world — chart-tint paper over faint lat/long grid,
+   engraved-caps labels, flat unmodulated state color, 0.4s settle. */
+
+:root {
+  --paper: #f7f5ef;
+  --paper-deep: #efede4;
+  --ink: #1e2a38;
+  --ink-soft: #5a6675;
+  --notam: #c8102e;
+  --chart: #1d5fa8;
+  --amber: #e8b93b;
+  --clear: #2e7d4f;
+  --hairline: rgba(30, 42, 56, 0.16);
+  --grid-line: rgba(30, 42, 56, 0.055);
+  --rail-w: 208px;
+  --settle: cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: ui-sans-serif, -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* lat/long grid — the chart ground */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(to right, var(--grid-line) 0 1px, transparent 1px 96px),
+    repeating-linear-gradient(to bottom, var(--grid-line) 0 1px, transparent 1px 96px);
+  z-index: 0;
+}
+
+.caps {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.stamp {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1.5px solid currentColor;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 10px;
+  font-weight: 700;
+  transform: rotate(-1.5deg);
+}
+.stamp.dumping { color: var(--amber); }
+.stamp.proposed { color: var(--amber); }
+.paused { opacity: 0.55; }
+.paused .title { text-decoration: line-through; text-decoration-color: var(--hairline); }
+.due-late { color: var(--notam) !important; font-weight: 800; }
+.due-marker {
+  position: absolute;
+  top: 4px;
+  bottom: 20px;
+  border-left: 2px dashed var(--notam);
+  pointer-events: none;
+}
+.due-marker .tip {
+  position: absolute;
+  top: 0;
+  left: 2px;
+  background: var(--notam);
+  color: var(--paper);
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+.stamp.planned { color: var(--chart); }
+.stamp.doing { color: var(--clear); }
+.stamp.done { color: var(--ink-soft); }
+.stamp.pending { color: var(--amber); }
+.stamp.succeeded { color: var(--clear); }
+.stamp.failed { color: var(--notam); }
+.stamp.running { color: var(--chart); }
+
+.shell { display: flex; min-height: 100vh; position: relative; z-index: 1; }
+
+.rail {
+  width: var(--rail-w);
+  flex-shrink: 0;
+  border-right: 1px solid var(--hairline);
+  padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+.rail .brand {
+  padding: 0 20px 16px;
+  border-bottom: 1px solid var(--hairline);
+  margin-bottom: 12px;
+}
+.rail .brand .name {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.rail a {
+  display: block;
+  padding: 8px 20px;
+  color: var(--ink);
+  text-decoration: none;
+  border-left: 3px solid transparent;
+}
+.rail a.active {
+  border-left-color: var(--notam);
+  background: var(--paper-deep);
+  font-weight: 600;
+}
+
+.main { flex: 1; padding: 28px 36px 64px; min-width: 0; }
+
+.card {
+  background: var(--paper);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  padding: 14px 16px;
+}
+.card.deep { background: var(--paper-deep); }
+
+button, .btn {
+  font: inherit;
+  color: var(--paper);
+  background: var(--ink);
+  border: 1px solid var(--ink);
+  border-radius: 4px;
+  padding: 7px 14px;
+  cursor: pointer;
+  transition: transform 0.4s var(--settle), background 0.15s;
+}
+button:hover { transform: translateY(-1px); }
+button:disabled { opacity: 0.5; cursor: default; transform: none; }
+button.ghost, .btn.ghost {
+  background: transparent;
+  color: var(--ink);
+}
+button.chart { background: var(--chart); border-color: var(--chart); }
+button.notam { background: var(--notam); border-color: var(--notam); }
+
+input[type="text"], input[type="password"], textarea, select {
+  font: inherit;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--hairline);
+  border-radius: 4px;
+  padding: 8px 10px;
+  width: 100%;
+  min-width: 0;
+}
+.row > input[type="text"], .row > input[type="password"], .row > select, .row > textarea { flex: 1 1 0; width: auto; }
+textarea { min-height: 120px; resize: vertical; }
+input:focus, textarea:focus { outline: 2px solid var(--chart); outline-offset: -1px; }
+
+/* Checkbox — drawn control: ink frame, chart fill + check when on. Still a
+   native input (keyboard + screen-reader behavior unchanged). */
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+  background: #fff;
+  border: 1.5px solid var(--ink-soft);
+  border-radius: 3px;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.15s, border-color 0.15s;
+}
+input[type="checkbox"]:hover { border-color: var(--ink); }
+input[type="checkbox"]:checked { background: var(--chart); border-color: var(--chart); }
+input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 4.5px;
+  top: 1.5px;
+  width: 4px;
+  height: 8px;
+  border-right: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  transform: rotate(45deg);
+}
+input[type="checkbox"]:focus-visible { outline: 2px solid var(--chart); outline-offset: 2px; }
+input[type="checkbox"]:disabled { opacity: 0.5; cursor: default; }
+
+/* Dispatch cards on the manifest */
+.dispatch {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  cursor: grab;
+  transition: transform 0.4s var(--settle), box-shadow 0.15s;
+}
+.dispatch:hover { transform: translateY(-2px); box-shadow: 0 4px 0 rgba(30,42,56,0.08); }
+.dispatch.dragging { opacity: 0.4; transform: rotate(-1.5deg) translateY(-2px); box-shadow: 0 4px 0 rgba(30,42,56,0.10); }
+/* drop indicator: the insertion slot opens at the TOP edge of the hovered card */
+.dispatch.drop-target { transform: translateY(2px); box-shadow: inset 0 3px 0 0 var(--chart); }
+.dispatch.selected { border-color: var(--chart); box-shadow: 0 0 0 1px var(--chart); }
+.dispatch.hidden-flight { opacity: 0.55; }
+.dispatch.hidden-flight:hover { opacity: 1; }
+.dispatch .title { font-weight: 700; font-size: 15px; }
+.dispatch .meta { display: flex; gap: 16px; align-items: center; margin-left: auto; }
+/* Drag grip — sits in the same slot as the checkbox and only appears on
+   card hover or grip focus (Gmail pattern); clicking it selects the flight. */
+.dispatch .grip-slot { position: relative; width: 17px; height: 17px; flex-shrink: 0; margin-left: -6px; margin-right: -8px; }
+.dispatch .grip-slot > input[type="checkbox"] { position: absolute; inset: 0; margin: auto; transition: opacity 0.15s; }
+.dispatch .grip-slot .grip {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 26px;
+  height: 24px;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: var(--ink-soft);
+  cursor: grab;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+}
+.dispatch:hover .grip-slot .grip,
+.dispatch .grip-slot .grip:focus-visible { opacity: 1; pointer-events: auto; color: var(--chart); }
+.dispatch:hover .grip-slot > input[type="checkbox"],
+.dispatch .grip-slot .grip:focus-visible ~ input[type="checkbox"] { opacity: 0; pointer-events: none; }
+.dispatch .grip:active { cursor: grabbing; }
+.notam-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--notam);
+  font-weight: 700;
+  font-size: 12px;
+}
+.notam-badge::before {
+  content: "";
+  width: 8px; height: 8px;
+  background: var(--notam);
+  border-radius: 1px;
+  transform: rotate(45deg);
+}
+
+/* Attachments + ignored entries in the thought-dump log */
+.attach-chip {
+  gap: 8px;
+  padding: 5px 8px;
+  border: 1px solid var(--hairline);
+  border-radius: 4px;
+  background: #fff;
+  font-size: 12px;
+}
+.attach-chip .attach-name {
+  color: var(--chart);
+  text-decoration: none;
+  max-width: 340px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+a.attach-name:hover { text-decoration: underline; }
+.attach-chip.ignored { opacity: 0.55; }
+/* Visually hidden but still activatable — display:none file inputs are
+   unreliable when triggered from a label (notably Safari). */
+.file-input-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.card.deep.ignored { opacity: 0.6; }
+.card.deep.ignored .brief-body { color: var(--ink-soft); }
+/* Instant CSS-only reflections of the native checkboxes — no rerender needed. */
+.card.deep:has(> .row input[type="checkbox"]:checked) { opacity: 0.6; }
+.attach-chip:has(input[type="checkbox"]:checked) { opacity: 0.55; }
+
+/* NOTAM strip */
+.notam-strip {
+  border: 1.5px solid var(--notam);
+  border-radius: 6px;
+  padding: 12px 16px;
+  background: rgba(200, 16, 46, 0.04);
+}
+.notam-item { padding: 10px 0; border-top: 1px dashed var(--hairline); }
+.notam-item:first-of-type { border-top: 0; }
+.notam-stream-header {
+  padding: 10px 0 2px;
+  border-top: 1px dashed var(--hairline);
+}
+.notam-stream-header:first-child { border-top: 0; padding-top: 2px; }
+.notam-item .q { font-weight: 700; }
+.notam-item .a { color: var(--ink-soft); }
+.notam-item.overridden { opacity: 0.6; }
+.notam-item .override { color: var(--notam); font-weight: 600; }
+
+/* Dispatch release sheet */
+.release { border: 1px solid var(--hairline); border-radius: 6px; overflow: hidden; }
+.release header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--hairline);
+  background: var(--paper-deep);
+}
+.release.proposed { border: 1.5px solid var(--chart); }
+.proposal-body { padding: 14px 16px; }
+.proposal-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  border-top: 1px dashed var(--hairline);
+  background: rgba(29, 95, 168, 0.04);
+}
+.why-input { font-size: 12px; color: var(--ink-soft); }
+.solution-heading { font-weight: 700; font-size: 14px; }
+.icon-btn {
+  background: none;
+  border: none;
+  padding: 0 2px 0 6px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--ink-soft);
+  vertical-align: baseline;
+}
+.icon-btn:hover { color: var(--ink); transform: none; }
+.md-block h3 { margin: 0 0 4px; font-size: 14px; }
+.md-block p { margin: 0 0 6px; }
+.md-block ul, .md-block ol { margin: 0 0 6px; padding-left: 20px; }
+.md-block li { margin: 2px 0; }
+.md-block table { border-collapse: collapse; margin: 0 0 8px; width: 100%; font-size: 13px; }
+.md-block th, .md-block td { border: 1px solid var(--hairline); padding: 5px 10px; text-align: left; vertical-align: top; }
+.md-block th { background: var(--paper-deep); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; }
+.leg {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--hairline);
+}
+.leg:first-of-type { border-top: 0; }
+.leg.done .title { text-decoration: line-through; color: var(--ink-soft); }
+/* Instant, CSS-only state: the leg checkbox is native/uncontrolled, so the
+   row reacts on click without waiting for the server round-trip. */
+.leg input[type="checkbox"]:checked ~ * .title { text-decoration: line-through; color: var(--ink-soft); }
+.leg .hours { margin-left: auto; white-space: nowrap; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.leg .hours b { color: var(--ink); }
+.stream-header {
+  padding: 8px 16px 4px;
+  border-top: 1px solid var(--hairline);
+  background: rgba(29, 95, 168, 0.05);
+}
+.stream-header:first-child { border-top: 0; }
+
+/* Route profile */
+.profile-wrap { position: relative; border: 1px solid var(--hairline); border-radius: 6px; background: #fff; padding: 16px 8px 28px; }
+.profile-axis { position: absolute; left: 8px; right: 8px; bottom: 8px; height: 1px; background: var(--hairline); }
+.day-tick { position: absolute; bottom: 8px; width: 1px; background: var(--hairline); }
+.day-tick .lbl { position: absolute; bottom: 4px; left: 2px; font-size: 9px; color: var(--ink-soft); white-space: nowrap; }
+.leg-bar {
+  position: absolute;
+  height: 14px;
+  background: var(--chart);
+  border-radius: 2px;
+  transition: transform 0.4s var(--settle);
+}
+.leg-bar:hover { transform: translateY(-2px); }
+.leg-bar.done { background: var(--clear); }
+.leg-bar.late { background: var(--notam); }
+.leg-bar .tip {
+  position: absolute;
+  bottom: 18px; left: 0;
+  background: var(--ink); color: var(--paper);
+  font-size: 11px; padding: 3px 8px; border-radius: 3px;
+  white-space: nowrap;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.15s;
+}
+.leg-bar:hover .tip { opacity: 1; }
+
+.row { display: flex; gap: 12px; align-items: center; }
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.mt { margin-top: 16px; }
+.mb { margin-bottom: 16px; }
+.muted { color: var(--ink-soft); }
+.mono { font-variant-numeric: tabular-nums; }
+.brief-body { white-space: pre-wrap; }
+
+/* ── Mobile: rail collapses to a top bar ── */
+@media (max-width: 720px) {
+  .shell { flex-direction: column; }
+  .rail {
+    width: 100%;
+    height: auto;
+    position: static;
+    flex-direction: row;
+    align-items: center;
+    padding: 10px 12px;
+    border-right: 0;
+    border-bottom: 1px solid var(--hairline);
+    gap: 2px;
+  }
+  .rail .brand { border-bottom: 0; padding: 0 12px 0 0; margin-bottom: 0; }
+  .rail .brand .name { font-size: 13px; }
+  .rail .brand .caps { display: none; }
+  .rail a { padding: 6px 10px; border-left: 0; border-bottom: 2px solid transparent; }
+  .rail a.active { border-bottom-color: var(--notam); background: transparent; }
+  .main { padding: 18px 14px 48px; }
+  .dispatch { flex-wrap: wrap; }
+  .dispatch .meta { margin-left: 0; width: 100%; justify-content: flex-start; }
+  .leg { flex-wrap: wrap; }
+  .leg .hours { margin-left: 0; }
+}
+
+/* ── Route profile day grid ── */
+.grid-row {
+  display: grid;
+  align-items: stretch;
+  border-top: 1px solid var(--hairline);
+}
+.grid-row:first-of-type { border-top: 0; }
+.grid-name {
+  padding: 6px 8px;
+  border-right: 1px solid var(--hairline);
+  overflow: hidden;
+}
+.grid-cell {
+  padding: 6px 2px;
+  text-align: center;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  border-right: 1px dashed rgba(30,42,56,0.06);
+  color: var(--ink);
+  min-height: 34px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+}
+.grid-cell.daylbl { color: var(--ink-soft); font-size: 9px; min-height: 22px; }
+.grid-cell.today { background: rgba(29, 95, 168, 0.07); }
+.grid-cell.overload { background: rgba(200, 16, 46, 0.14); }
+.grid-cell.duecell { box-shadow: inset 2px 0 0 var(--notam); }
+.grid-cell .grid-cap { color: var(--ink-soft); font-size: 8px; }
+.grid-cell .grid-total { font-weight: 700; }
+.flight-row { cursor: pointer; transition: transform 0.4s var(--settle); }
+.flight-row:hover { background: var(--paper-deep); }

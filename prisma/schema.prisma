@@ -1,0 +1,123 @@
+// Prisma schema — todo_new
+// Core entities: Todo, ThoughtDump, Task, Assumption, AgentRun, WeeklyCapacity
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Todo {
+  id        String   @id @default(cuid())
+  title     String
+  status    String   @default("dumping") // dumping | proposed | planned | doing | done
+  sortOrder Int      @default(0) // drag-to-order priority
+  etaDate   DateTime?
+  dueDate   DateTime? // deadline — flag-only: never reshuffles the queue, marks LATE when ETA passes it
+  workDir   String? // target directory when tasks are dispatched to agents (local path, or on the ssh target)
+  sshTarget String? // user@host for remote dispatches; null = this machine
+  paused    Boolean  @default(false) // excluded from scheduling + the background agent
+  hidden    Boolean  @default(false) // hidden from the manifest list (kept, not deleted)
+  solution  String?  // JSON (Solution): adopted current solution — what the deliverable contains
+  solutionCandidate String? // JSON (SolutionCandidate): proposed solution awaiting adopt/discard
+  solutionComment String? // free-text feedback steering the next solution proposal (optional)
+  planHistory String? // JSON: [{createdAt, tasks, assumptions}] — superseded live plans, newest first
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  dumps      ThoughtDump[]
+  tasks      Task[]
+  assumptions Assumption[]
+}
+
+model ThoughtDump {
+  id        String   @id @default(cuid())
+  todoId    String
+  todo      Todo     @relation(fields: [todoId], references: [id], onDelete: Cascade)
+  content   String
+  ignored   Boolean  @default(false) // excluded from the planner's merged dump (kept for reference)
+  createdAt DateTime @default(now())
+
+  attachments Attachment[]
+
+  @@index([todoId, createdAt])
+}
+
+// A file attached to a thought dump. Bytes live on disk under
+// data/attachments/<id>; this row points at them with `path`. `text` is the
+// extracted text for text-like files, fed to the planner unless ignored.
+model Attachment {
+  id        String   @id @default(cuid())
+  dumpId    String
+  dump      ThoughtDump @relation(fields: [dumpId], references: [id], onDelete: Cascade)
+  filename  String
+  mimeType  String
+  size      Int
+  path      String   // relative path on disk, e.g. data/attachments/<id>
+  text      String?  // extracted text for text-like files (truncated)
+  ignored   Boolean  @default(false) // excluded from the planner even when its dump is used
+  createdAt DateTime @default(now())
+
+  @@index([dumpId])
+}
+
+model Task {
+  id             String    @id @default(cuid())
+  todoId         String
+  todo           Todo      @relation(fields: [todoId], references: [id], onDelete: Cascade)
+  title          String
+  why            String?
+  sortOrder      Int       @default(0)
+  dependsOnId    String?
+  dependsOn      Task?     @relation("TaskDeps", fields: [dependsOnId], references: [id])
+  dependents     Task[]    @relation("TaskDeps")
+  effortHours    Float? // human-alone estimate
+  aiAdjustedHours Float? // with AI assistance
+  confidence     String?  // high | medium | low
+  status         String   @default("pending") // pending | doing | done
+  stream         String?  // which dump request this leg serves (coverage grouping)
+  startDate      DateTime?
+  endDate        DateTime?
+  execStrategy   String?  // opencode | herdr — how this task is dispatched
+  execStatus     String?  // queued | running | succeeded | failed
+  execResult     String?  // last dispatch output (truncated)
+
+  @@index([todoId, sortOrder])
+}
+
+model Assumption {
+  id         String   @id @default(cuid())
+  todoId     String
+  todo       Todo     @relation(fields: [todoId], references: [id], onDelete: Cascade)
+  question   String
+  answer     String   // the AI's assumed answer
+  stream     String?  // which request this NOTAM belongs to (categorized like the release)
+  status     String   @default("pending_review") // pending_review | accepted | overridden
+  override   String?  // user's correction
+  createdAt  DateTime @default(now())
+
+  @@index([todoId])
+}
+
+model AgentRun {
+  id         String   @id @default(cuid())
+  mode       String   // morning-brief | nightly-replan | weekly-retro | expand-next | manual-full
+  summary    String   // what the agent did, in plain language
+  snapshot   String   // JSON before/after for rollback
+  createdAt  DateTime @default(now())
+}
+
+model WeeklyCapacity {
+  id        String @id @default(cuid())
+  weekday   Int    @unique // 0=Sunday .. 6=Saturday
+  hours     Float  @default(0)
+}
+
+model AppSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}

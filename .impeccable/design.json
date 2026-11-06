@@ -1,0 +1,36 @@
+{
+  "$schema": "https://impeccable.style/design-schema/1.json",
+  "name": "Flight Bag",
+  "world": "Flight Planning",
+  "mode": "operate",
+  "color": {
+    "paper": "#F7F5EF",
+    "paperDeep": "#EFEDE4",
+    "ink": "#1E2A38",
+    "inkSoft": "#5A6675",
+    "notam": "#C8102E",
+    "chart": "#1D5FA8",
+    "amber": "#E8B93B",
+    "clear": "#2E7D4F",
+    "hairline": "rgba(30,42,56,0.16)",
+    "gridLine": "rgba(30,42,56,0.055)"
+  },
+  "type": {
+    "body": "ui-sans-serif, -apple-system, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif",
+    "label": "uppercase, 11px, 600, letter-spacing 0.14em (.caps)",
+    "stamp": "uppercase, 10px, 700, letter-spacing 0.12em, 1.5px border, rotate(-1.5deg)",
+    "numbers": "tabular-nums"
+  },
+  "motion": {
+    "easing": "cubic-bezier(0.34, 1.4, 0.64, 1)",
+    "duration": "0.4s",
+    "note": "overshoot-and-settle; deliberate world commitment"
+  },
+  "signature": ["notam-strip", "route-profile"],
+  "breakpoints": { "mobile": "720px" },
+  "files": {
+    "tokens": "app/globals.css",
+    "product": "PRODUCT.md",
+    "brief": ".impeccable/briefs/app-shell.md"
+  }
+}

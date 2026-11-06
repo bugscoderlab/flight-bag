@@ -1,0 +1,122 @@
+{
+  "title": "Choose the visual world",
+  "question": "The roll assigned Expedition Route Plan. Keep it, take an alternate, or re-roll.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "Expedition Route Plan",
+      "kicker": "THE ROLL",
+      "lineage": "mountaineering expedition planning — topo maps, route cards, field journals",
+      "thesis": "Every project is an expedition: a route of legs from base camp to summit, with the day's camp always marked and the weather of your calendar deciding how far you get.",
+      "palette": ["#F4F1E8", "#2E2A24", "#4A7C59", "#8A8F98", "#D4491F", "#1D5FA8"],
+      "materials": [
+        "contour-line topo paper",
+        "field-journal grid",
+        "elevation tint"
+      ],
+      "viewport": "A working shell: left rail (Dump, Expeditions, Route Profile, Briefs), main area listing projects as expedition cards each showing summit ETA and next leg; a route-profile strip runs beneath — the signature move — drawing this week's scheduled legs as a route with duration-true segment lengths and camp markers per day.",
+      "risk": "Expedition ephemera can pile into theme (carabiners, flags); the build keeps only contour grammar, terrain palette, and journal type — layout stays a standard product shell.",
+      "raised": [
+        { "from": "challenger-ikeda", "raise": "Two-tone discipline: no muddy greys anywhere — terrain colors sit flat and unmodulated, state colors pure." },
+        { "from": "challenger-feed", "raise": "The next leg is always computed before you look — the morning brief renders first, one glance above the fold." },
+        { "from": "challenger-laban", "raise": "Duration is geometry: in the route profile a leg's drawn length is its estimated hours, to scale — no decorative segments." },
+        { "from": "challenger-zoo", "raise": "Flat unmodulated state color, and motion that overshoots 0.4s and settles, expedition pacing not SaaS snappiness." },
+        { "from": "challenger-folio", "raise": "The weekly retro aligns this week against last on one shared baseline, plates on one stem." }
+      ]
+    },
+    {
+      "id": "model-pick",
+      "label": "Flight Planning",
+      "kicker": "IMPECCABLE'S PICK",
+      "lineage": "pilot flight bag — navigation charts, dispatch releases, NOTAMs",
+      "thesis": "Every plan is a dispatch release: the route, the fuel (your hours), and the NOTAMs — assumptions you must read before departure.",
+      "palette": ["#F7F5EF", "#1E2A38", "#C8102E", "#1D5FA8", "#E8B93B"],
+      "materials": [
+        "aviation chart tint",
+        "engraved caps",
+        "release-stamp ink"
+      ],
+      "viewport": "Same product shell in chart grammar; the assumption panel reads as a NOTAM strip across the top of a plan — the strongest possible mapping for this product's mechanism.",
+      "risk": "The most familiar planning metaphor in the list; the honest risk is it stays an aviation costume instead of a working tool."
+    },
+    {
+      "id": "challenger-saville",
+      "label": "Factory Catalog (FAC)",
+      "verdict": "competitive",
+      "lineage": "Factory Records catalog sleeves — matte black, fac numbers, coded color strips",
+      "thesis": "Todos as catalog entries: assigned numbers, state in coded color, one item decoded to full color at a time.",
+      "palette": ["#0A0A0A", "#F2F0ED", "#2B4BD8", "#F2C71B", "#D92B2B", "#8C8C8C"],
+      "materials": [
+        "matte black ground",
+        "hairline white plot",
+        "engraved caps"
+      ],
+      "viewport": "Matte-black tool with white hairline schedule plot; projects indexed by number, decoded on selection.",
+      "case": "Holds audience identification — a builder would wear this identity — but state-in-code and number-only navigation fight daily scanability; loses product clarity narrowly.",
+      "risk": "Reads as music-museum retro when the coding is not ruthlessly consistent.",
+      "hero": "https://impeccable.style/worlds/cards/brand-identity-canon-saville-catalog-sleeve-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/brand-identity-canon-saville-catalog-sleeve.webp"
+    },
+    {
+      "id": "challenger-ikeda",
+      "label": "Data-Sublime Field",
+      "verdict": "declined",
+      "lineage": "Ikeda-style datamatics — barcode columns, sine lattices, pure black and white",
+      "case": "Fuses to art installation, not a working todo tool; scanability dies at data density.",
+      "kept": "Total two-tone palette commitment — raised into the assigned direction.",
+      "hero": "https://impeccable.style/worlds/cards/ikeda-datamatics-hero.webp"
+    },
+    {
+      "id": "challenger-feed",
+      "label": "Vertical Feed",
+      "verdict": "declined",
+      "lineage": "full-bleed vertical media surfaces",
+      "case": "One item owning the viewport destroys this product's core value: seeing all projects and their ETAs at once.",
+      "kept": "The next item always loaded and one snap away — raised as always-computed morning brief.",
+      "hero": "https://impeccable.style/worlds/cards/pop-culture-shelf-vertical-video-feed-surface-hero.webp"
+    },
+    {
+      "id": "challenger-laban",
+      "label": "Labanotation Score",
+      "verdict": "declined",
+      "lineage": "dance notation — shaped blocks whose length is exact duration",
+      "case": "Duration-as-length is genuinely legible, but the bilateral limb columns map to nothing in the product.",
+      "kept": "Exact-duration-as-geometry — raised as scale-true leg lengths in the route profile.",
+      "hero": "https://impeccable.style/worlds/cards/notation-diagram-systems-labanotation-hero.webp"
+    },
+    {
+      "id": "challenger-zoo",
+      "label": "Zoo Guide Map",
+      "verdict": "declined",
+      "lineage": "flat-color lobe cartography, capsule controls",
+      "case": "Lobe navigation is charming leisure cartography; a daily task tool needs lists and tables it can scan.",
+      "kept": "Flat unmodulated color and 0.4s overshoot motion — raised into the assigned direction.",
+      "hero": "https://impeccable.style/worlds/cards/aww2-zoo-gardens-guide-map-hero.webp"
+    },
+    {
+      "id": "challenger-folio",
+      "label": "Botanical Folio",
+      "verdict": "declined",
+      "lineage": "plates of one plant on a shared baseline, stage by stage",
+      "case": "Fixed-scale comparison is beautiful for retrospectives but the folio sequence maps poorly to daily operation.",
+      "kept": "The shared-baseline registered comparison — raised as the weekly retro view.",
+      "hero": "https://impeccable.style/worlds/cards/editorial-sequence-montage-botanical-folio-season-hero.webp"
+    }
+  ],
+  "reroll": {
+    "registers": ["safer", "bolder"]
+  },
+  "steer": true,
+  "canon": true,
+  "canonCard": {
+    "label": "The category standard",
+    "thesis": "Linear/Notion-grade clean SaaS productivity UI: sidebar, cards, neutral palette, one accent — executed at full craft.",
+    "palette": ["#FFFFFF", "#111827", "#2563EB", "#F3F4F6"],
+    "materials": [
+      "clean grid",
+      "neutral chrome"
+    ],
+    "viewport": "The arrangement a visitor expects from a todo app, at impeccable fidelity.",
+    "risk": "Indistinguishable from the competition by design — the rut this round exists to refuse."
+  }
+}
