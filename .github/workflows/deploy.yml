@@ -1,0 +1,26 @@
+name: Deploy to live
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            set -e
+            cd /srv/flight-bag
+            git fetch origin main
+            git reset --hard origin/main
+            npm ci
+            npx prisma db push
+            npm run build
+            systemctl restart flight-bag
+            systemctl status flight-bag --no-pager | head -5
