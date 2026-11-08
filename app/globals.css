@@ -414,6 +414,44 @@ a.attach-name:hover { text-decoration: underline; }
 .mono { font-variant-numeric: tabular-nums; }
 .brief-body { white-space: pre-wrap; }
 
+/* Tags — chart-marker chips on the manifest */
+.tag-row { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 4px; }
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 7px;
+  border: 1px solid var(--chart);
+  border-radius: 3px;
+  background: rgba(29, 95, 168, 0.06);
+  color: var(--chart);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+.tag .tag-x {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font-size: 10px;
+  cursor: pointer;
+  opacity: 0.6;
+}
+.tag .tag-x:hover { opacity: 1; transform: none; }
+.tag.tag-add { border-style: dashed; border-color: var(--ink-soft); color: var(--ink-soft); background: none; cursor: pointer; font-weight: 500; }
+.tag.tag-add:hover { border-color: var(--chart); color: var(--chart); transform: none; }
+.tag.tag-filter { cursor: pointer; }
+.tag.tag-filter.on { background: var(--chart); color: var(--paper); }
+.tag-input {
+  width: 110px;
+  padding: 1px 7px !important;
+  font-size: 11px !important;
+  border-style: dashed !important;
+  min-height: 0;
+}
+
 /* ── Mobile: rail collapses to a top bar ── */
 @media (max-width: 720px) {
   .shell { flex-direction: column; }
@@ -427,6 +465,8 @@ a.attach-name:hover { text-decoration: underline; }
     border-right: 0;
     border-bottom: 1px solid var(--hairline);
     gap: 2px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
   .rail .brand { border-bottom: 0; padding: 0 12px 0 0; margin-bottom: 0; }
   .rail .brand .name { font-size: 13px; }
@@ -435,9 +475,42 @@ a.attach-name:hover { text-decoration: underline; }
   .rail a.active { border-bottom-color: var(--notam); background: transparent; }
   .main { padding: 18px 14px 48px; }
   .dispatch { flex-wrap: wrap; }
-  .dispatch .meta { margin-left: 0; width: 100%; justify-content: flex-start; }
+  .dispatch .meta { margin-left: 0; width: 100%; justify-content: flex-start; flex-wrap: wrap; gap: 8px; }
   .leg { flex-wrap: wrap; }
   .leg .hours { margin-left: 0; }
+}
+
+/* ── Touch: thumbs, no zoom-on-focus, generous targets ── */
+@media (pointer: coarse) {
+  html, body { font-size: 16px; }
+  .caps { font-size: 12px; }
+  button, .btn { min-height: 44px; padding: 10px 18px; }
+  button.icon-btn { min-height: 32px; padding: 4px 10px; }
+  input[type="text"], input[type="password"], textarea, select { font-size: 16px; }
+  input[type="checkbox"] { width: 22px; height: 22px; }
+  input[type="checkbox"]:checked::after { left: 6px; top: 2px; width: 5px; height: 10px; }
+  .tag { padding: 3px 10px; font-size: 13px; }
+  .tag .tag-x { font-size: 12px; padding: 2px 4px; }
+  .tag.tag-add { min-height: 32px; }
+  .tag-input { font-size: 16px !important; width: 140px; padding: 4px 8px !important; }
+  .rail a { padding: 10px 12px; }
+  .attach-chip { padding: 10px; }
+  .dispatch .grip-slot { width: 30px; height: 30px; }
+  .dispatch .grip { width: 30px; height: 30px; }
+  /* Grip is hover-revealed on desktop; on touch it must always be tappable */
+  .dispatch .grip { opacity: 1; pointer-events: auto; }
+  .dispatch .grip-slot > input[type="checkbox"] { opacity: 0; pointer-events: none; }
+  body { padding-bottom: env(safe-area-inset-bottom); }
+}
+
+/* Rows that should wrap instead of overflow on narrow screens */
+.row.wrap { flex-wrap: wrap; }
+/* Header spacer: pushes trailing stamps/controls right on desktop, drops to
+   its own (zero-height) line on mobile where the row wraps naturally. */
+.head-spacer { margin-left: auto; }
+@media (max-width: 720px) {
+  .head-spacer { display: none; }
+  h1 { font-size: 22px; }
 }
 
 /* ── Route profile day grid ── */

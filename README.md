@@ -20,6 +20,17 @@ as overrides first; the LLM only runs when you hit **Re-file flight plan**).
 
 ## What's inside
 
+- **Manifest** — every flight is a card: drag (or arrow-key the grip) into
+  priority order, bulk pause/hide/plan via the checkboxes, scrap with
+  confirm. Tags (`Todo.tags`, JSON string[]) categorize flights by project /
+  subproject: type them in the title box when filing (`API redesign
+  #client-acme #backend`), add/remove inline on the card (＋ tag), and filter
+  the manifest by clicking tag chips — multiple chips intersect.
+- **Mobile** — usable on a phone for dumping on the go: the rail collapses
+  to a top bar, rows wrap instead of overflowing, touch targets grow to
+  44px (grip always visible — no hover on touch), inputs render at 16px so
+  iOS doesn't zoom on focus, and the layout respects notch safe areas.
+
 - **Planner** (`lib/planner.ts`) — self-interviewing AI: `planProject`,
   `revisePlan`, `estimateTasks` (solo vs AI-assisted hours). Strict JSON via
   forced tool calls. Provider config lives in `lib/llm.ts` — OpenRouter

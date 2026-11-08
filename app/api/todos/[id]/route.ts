@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { scheduleAll } from "@/lib/scheduler";
 import { deleteAttachmentFile } from "@/lib/attachment";
+import { normalizeTags } from "@/lib/tags";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -35,6 +36,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   if (typeof body.paused === "boolean") data.paused = body.paused;
   if (typeof body.hidden === "boolean") data.hidden = body.hidden;
   if (typeof body.sortOrder === "number") data.sortOrder = body.sortOrder;
+  if (body.tags !== undefined && Array.isArray(body.tags)) data.tags = JSON.stringify(normalizeTags(body.tags));
   const todo = await prisma.todo.update({ where: { id }, data });
   if (typeof body.sortOrder === "number") await scheduleAll();
   return NextResponse.json(todo);

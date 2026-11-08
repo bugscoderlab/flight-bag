@@ -309,12 +309,12 @@ export function Detail({ todo }: { todo: Todo }) {
 
   return (
     <div className="stack">
-      <div className="row">
+      <div className="row wrap">
         <div>
           <div className="caps mb">Flight {todo.id.slice(-6).toUpperCase()}</div>
           <h1 style={{ margin: 0 }}>{todo.title}</h1>
         </div>
-        <span style={{ marginLeft: "auto" }} />
+        <span className="head-spacer" />
         {late && <span className="stamp failed">late — eta {todo.etaDate!.slice(5, 10)}</span>}
         <label className="row" style={{ gap: 6 }} title="Due date — flags LATE, never reshuffles the queue">
           <span className="caps">due</span>
@@ -358,7 +358,7 @@ export function Detail({ todo }: { todo: Todo }) {
               <span className="caps muted">Uploads when you press “Append to dump”.</span>
             </div>
           )}
-          <div className="row">
+          <div className="row wrap">
             <button type="submit" className="ghost" disabled={uploading || (!dump.trim() && files.length === 0)}>
               {uploading ? "Appending…" : "Append to dump"}
             </button>
@@ -502,7 +502,7 @@ export function Detail({ todo }: { todo: Todo }) {
       </section>
 
       {/* Working directory + dispatch target for dispatches */}
-      <section className="card row">
+      <section className="card row wrap">
         <div className="stack" style={{ flex: 1, gap: 8 }}>
           <div className="caps">Dispatch target — {sshTarget ? `runs on ${sshTarget} over SSH` : "runs on this machine"}</div>
           <input type="text" placeholder={sshTarget ? "/path/on/remote/host" : "~/code/my-project"} value={workDir} onChange={(e) => setWorkDir(e.target.value)} />

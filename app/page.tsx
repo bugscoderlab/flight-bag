@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { Manifest } from "./board";
+import { parseTags } from "@/lib/tags";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,7 @@ export default async function Page() {
           notams: t._count.assumptions,
           dumps: t._count.dumps,
           hasDumps: t._count.dumps > 0,
+          tags: parseTags(t.tags),
           paused: t.paused,
           hidden: t.hidden,
         }))}

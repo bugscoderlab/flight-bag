@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { parseTags } from "@/lib/tags";
 
 type Row = {
   id: string;
@@ -15,6 +16,7 @@ type Row = {
   notams: number;
   dumps: number;
   hasDumps: boolean;
+  tags: string[];
   paused: boolean;
   hidden: boolean;
 };
@@ -22,6 +24,9 @@ type Row = {
 export function Manifest({ todos: initial }: { todos: Row[] }) {
   const [todos, setTodos] = useState(initial);
   const [title, setTitle] = useState("");
+  const [tagFilter, setTagFilter] = useState<Set<string>>(new Set());
+  const [tagEditing, setTagEditing] = useState<string | null>(null);
+  const [tagDraft, setTagDraft] = useState("");
   const [dragging, setDragging] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [arming, setArming] = useState<string | null>(null);
@@ -74,6 +79,7 @@ export function Manifest({ todos: initial }: { todos: Row[] }) {
           notams: 0,
           dumps: 0,
           hasDumps: false,
+          tags: parseTags(created.tags),
           paused: false,
           hidden: false,
         },
@@ -81,6 +87,33 @@ export function Manifest({ todos: initial }: { todos: Row[] }) {
       setTitle("");
       router.refresh();
     }
+  }
+
+  // Tags replace the whole set server-side (normalize = trim + case-insensitive dedupe).
+  async function updateTags(t: Row, tags: string[]) {
+    setTodos((ts) => ts.map((x) => (x.id === t.id ? { ...x, tags } : x)));
+    await fetch(`/api/todos/${t.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tags }),
+    });
+    router.refresh();
+  }
+
+  function addTag(t: Row) {
+    const incoming = tagDraft.split(",").map((s) => s.trim()).filter(Boolean);
+    if (incoming.length) updateTags(t, [...t.tags, ...incoming]);
+    setTagDraft("");
+    setTagEditing(null);
+  }
+
+  function toggleTagFilter(tag: string) {
+    setTagFilter((s) => {
+      const n = new Set(s);
+      if (n.has(tag)) n.delete(tag);
+      else n.add(tag);
+      return n;
+    });
   }
 
   async function scrap(id: string) {
@@ -205,7 +238,12 @@ export function Manifest({ todos: initial }: { todos: Row[] }) {
   const anyActive = selRows.some((t) => !t.paused);
   const planLabel = selRows.some((t) => t.status === "dumping") ? "Plan" : "Re-plan";
   const hiddenList = todos.filter((t) => t.hidden);
-  const visible = todos.filter((t) => !t.hidden);
+  const visibleAll = todos.filter((t) => !t.hidden);
+  // Tag filter intersects: a flight shows only when it carries every selected tag.
+  const visible = tagFilter.size
+    ? visibleAll.filter((t) => [...tagFilter].every((f) => t.tags.some((x) => x.toLowerCase() === f.toLowerCase())))
+    : visibleAll;
+  const allTags = [...new Map(todos.flatMap((t) => t.tags).map((x) => [x.toLowerCase(), x])).values()].sort((a, b) => a.localeCompare(b));
   const selAnyVisible = selRows.some((t) => !t.hidden);
 
   const renderCard = (t: Row) => (
@@ -264,6 +302,40 @@ export function Manifest({ todos: initial }: { todos: Row[] }) {
         <Link href={`/todo/${t.id}`} style={{ textDecoration: "none", color: "inherit" }}>
           <div className="title" style={{ cursor: "pointer" }}>{t.title}</div>
         </Link>
+        <div className="tag-row">
+            {t.tags.map((tag) => (
+              <span key={tag} className="tag">
+                {tag}
+                <button
+                  type="button"
+                  className="tag-x"
+                  title={`Remove tag ${tag}`}
+                  onClick={() => updateTags(t, t.tags.filter((x) => x !== tag))}
+                >
+                  ✕
+                </button>
+              </span>
+            ))}
+            {tagEditing === t.id ? (
+              <input
+                type="text"
+                className="tag-input"
+                placeholder="tag, another"
+                value={tagDraft}
+                autoFocus
+                onChange={(e) => setTagDraft(e.target.value)}
+                onBlur={() => addTag(t)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") { e.preventDefault(); addTag(t); }
+                  if (e.key === "Escape") { setTagDraft(""); setTagEditing(null); }
+                }}
+              />
+            ) : (
+              <button type="button" className="tag tag-add" title="Add a tag — project or subproject" onClick={() => setTagEditing(t.id)}>
+                ＋ tag
+              </button>
+            )}
+          </div>
         <div className="muted" style={{ fontSize: 12 }}>
           {t.openLegs} open leg{t.openLegs === 1 ? "" : "s"} · {t.dumps} dump{t.dumps === 1 ? "" : "s"}
         </div>
@@ -301,15 +373,45 @@ export function Manifest({ todos: initial }: { todos: Row[] }) {
       <form onSubmit={create} className="row">
         <input
           type="text"
-          placeholder="File a new flight — title only…"
+          placeholder="File a new flight — title, #tag it by project…"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
         <button type="submit">File</button>
       </form>
 
+      {allTags.length > 0 && (
+        <div className="row wrap" style={{ gap: 6 }}>
+          <span className="caps muted">filter</span>
+          {allTags.map((tag) => {
+            const on = [...tagFilter].some((f) => f.toLowerCase() === tag.toLowerCase());
+            return (
+              <button
+                key={tag}
+                type="button"
+                className={`tag tag-filter${on ? " on" : ""}`}
+                aria-pressed={on}
+                onClick={() => toggleTagFilter(tag)}
+              >
+                {tag}
+              </button>
+            );
+          })}
+          {tagFilter.size > 0 && (
+            <>
+              <span className="caps muted">
+                {visible.length}/{visibleAll.length} flights
+              </span>
+              <button type="button" className="icon-btn" style={{ width: "auto" }} onClick={() => setTagFilter(new Set())}>
+                clear
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
       {selected.size > 0 && (
-        <div className="card row" style={{ position: "sticky", top: 8, zIndex: 5, boxShadow: "0 4px 0 rgba(30,42,56,0.10)" }}>
+        <div className="card row wrap" style={{ position: "sticky", top: 8, zIndex: 5, boxShadow: "0 4px 0 rgba(30,42,56,0.10)" }}>
           <span className="caps">{selected.size} selected</span>
           <button className="ghost" onClick={bulkPause}>
             {anyActive ? `⏸ Pause (${selRows.filter((t) => !t.paused).length || selected.size})` : `▶ Resume (${selected.size})`}

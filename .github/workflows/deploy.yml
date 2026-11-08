@@ -16,7 +16,7 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
             set -e
-            cd /srv/flight-bag
+            cd /srv/todo
             git fetch origin main
             git reset --hard origin/main
             npm ci
