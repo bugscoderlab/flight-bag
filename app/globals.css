@@ -548,9 +548,9 @@ a.attach-name:hover { text-decoration: underline; }
   input[type="text"], input[type="password"], textarea, select { font-size: 16px; }
   input[type="checkbox"] { width: 22px; height: 22px; }
   input[type="checkbox"]:checked::after { left: 6px; top: 2px; width: 5px; height: 10px; }
-  .tag { padding: 3px 10px; font-size: 13px; }
-  .tag .tag-x { font-size: 12px; padding: 2px 4px; }
-  .tag.tag-add { min-height: 32px; }
+  .tag { padding: 3px 10px; font-size: 13px; min-height: 32px; }
+  .tag .tag-x { font-size: 12px; padding: 2px 4px; min-height: 0; }
+  .tag.tag-add { min-height: 32px; padding: 3px 10px; }
   .tag-input { font-size: 16px !important; width: 140px; padding: 4px 8px !important; }
   .rail a { padding: 10px 12px; }
   .attach-chip { padding: 10px; }
