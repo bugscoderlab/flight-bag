@@ -42,8 +42,21 @@ model ThoughtDump {
   createdAt DateTime @default(now())
 
   attachments Attachment[]
+  edits       DumpEdit[]
 
   @@index([todoId, createdAt])
+}
+
+// Audit trail for dump edits: one row per edit, storing the full before/after.
+model DumpEdit {
+  id         String   @id @default(cuid())
+  dumpId     String
+  dump       ThoughtDump @relation(fields: [dumpId], references: [id], onDelete: Cascade)
+  oldContent String
+  newContent String
+  createdAt  DateTime @default(now())
+
+  @@index([dumpId, createdAt])
 }
 
 // A file attached to a thought dump. Bytes live on disk under

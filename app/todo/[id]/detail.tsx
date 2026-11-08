@@ -24,6 +24,7 @@ type Dump = {
   content: string;
   createdAt: string;
   ignored: boolean;
+  edits: { id: string; oldContent: string; newContent: string; createdAt: string }[];
   attachments: Attachment[];
 };
 
@@ -75,6 +76,9 @@ export function Detail({ todo }: { todo: Todo }) {
   const [notamOpen, setNotamOpen] = useState<Record<string, boolean>>({});
   const [dispatching, setDispatching] = useState<string | null>(null);
   const [dueSaved, setDueSaved] = useState(false);
+  const [editingDump, setEditingDump] = useState<string | null>(null);
+  const [editText, setEditText] = useState("");
+  const [trailOpen, setTrailOpen] = useState<Record<string, boolean>>({});
   const fileRef = useRef<HTMLInputElement>(null);
 
   const late = Boolean(todo.etaDate && todo.dueDate && todo.etaDate > todo.dueDate);
@@ -173,6 +177,23 @@ export function Detail({ todo }: { todo: Todo }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ignored }),
     });
+    router.refresh();
+  }
+
+  // Editing rewrites the dump; the before/after is logged server-side
+  // (DumpEdit) so the full trail survives.
+  async function saveDumpEdit(dumpId: string) {
+    if (!editText.trim()) return;
+    const res = await fetch(`/api/todos/${todo.id}/dumps/${dumpId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content: editText }),
+    });
+    if (!res.ok) {
+      toast.error("Could not save edit");
+      return;
+    }
+    setEditingDump(null);
     router.refresh();
   }
 
@@ -373,6 +394,28 @@ export function Detail({ todo }: { todo: Todo }) {
               <span className="caps">{d.createdAt.slice(0, 16).replace("T", " ")}</span>
               {d.ignored && <span className="stamp done">ignored</span>}
               <span style={{ marginLeft: "auto" }} />
+              {d.edits.length > 0 && (
+                <button
+                  className="icon-btn"
+                  style={{ width: "auto", padding: "0 6px", fontSize: 11 }}
+                  title="Show edit trail"
+                  onClick={() => setTrailOpen((s) => ({ ...s, [d.id]: !s[d.id] }))}
+                >
+                  {trailOpen[d.id] ? "▾" : "▸"} edited {d.edits.length}×
+                </button>
+              )}
+              {d.content && (
+                <button
+                  className="icon-btn"
+                  title="Edit this dump"
+                  onClick={() => {
+                    setEditingDump(editingDump === d.id ? null : d.id);
+                    setEditText(d.content);
+                  }}
+                >
+                  ✎
+                </button>
+              )}
               <label className="row" style={{ gap: 5, cursor: "pointer" }} title="Exclude this dump from the plan AI">
                 <input
                   key={String(d.ignored)}
@@ -390,7 +433,35 @@ export function Detail({ todo }: { todo: Todo }) {
                 ✕
               </button>
             </div>
-            {d.content && <div className="brief-body">{d.content}</div>}
+            {editingDump === d.id ? (
+              <div className="stack" style={{ gap: 6 }}>
+                <textarea value={editText} onChange={(e) => setEditText(e.target.value)} rows={4} autoFocus />
+                <div className="row" style={{ gap: 6 }}>
+                  <button type="button" className="chart" onClick={() => saveDumpEdit(d.id)}>Save</button>
+                  <button type="button" onClick={() => setEditingDump(null)}>Cancel</button>
+                  <span className="caps muted">edit is logged to the trail</span>
+                </div>
+              </div>
+            ) : (
+              d.content && <div className="brief-body">{d.content}</div>
+            )}
+            {trailOpen[d.id] && d.edits.length > 0 && (
+              <div className="stack" style={{ gap: 6, marginTop: 8, borderTop: "1px dashed var(--line)", paddingTop: 8 }}>
+                {d.edits.map((e) => (
+                  <div key={e.id} className="card deep" style={{ fontSize: 12 }}>
+                    <div className="caps muted">{e.createdAt.slice(0, 16).replace("T", " ")}</div>
+                    <div style={{ marginTop: 4 }}>
+                      <span className="caps" style={{ color: "var(--warn, #c96)" }}>was:</span>
+                      <div className="brief-body" style={{ whiteSpace: "pre-wrap", opacity: 0.75 }}>{e.oldContent}</div>
+                    </div>
+                    <div style={{ marginTop: 4 }}>
+                      <span className="caps" style={{ color: "var(--ok, #6c6)" }}>now:</span>
+                      <div className="brief-body" style={{ whiteSpace: "pre-wrap" }}>{e.newContent}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
             {d.attachments.length > 0 && (
               <div className="stack" style={{ gap: 4, marginTop: d.content ? 8 : 0 }}>
                 {d.attachments.map((a) => (

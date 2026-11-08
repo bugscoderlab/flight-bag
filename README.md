@@ -28,7 +28,9 @@ as overrides first; the LLM only runs when you hit **Re-file flight plan**).
   `PLANNER_MOCK=1` for offline development.
 - **Thought dumps** — every non-ignored dump (and the extracted text of its
   non-ignored attachments) merges into one note for the planner; ignores are
-  reversible and never delete anything. Attachment bytes are written to disk
+  reversible and never delete anything. Dumps are editable (✎ on the detail
+  page); every edit is stored as a before/after `DumpEdit` row shown as an
+  expandable trail on the dump. Attachment bytes are written to disk
   under `data/attachments/<id>` (gitignored) and the `Attachment` row points at
   them with `path`; text-like files feed the planner, other files are stored
   for download only. Deleting a file, dump, or flight removes the backing file.

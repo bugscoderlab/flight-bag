@@ -12,7 +12,10 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
     include: {
       dumps: {
         orderBy: { createdAt: "desc" },
-        include: { attachments: { select: { id: true, filename: true, mimeType: true, size: true, ignored: true, text: true } } },
+        include: {
+          attachments: { select: { id: true, filename: true, mimeType: true, size: true, ignored: true, text: true } },
+          edits: { orderBy: { createdAt: "desc" }, select: { id: true, oldContent: true, newContent: true, createdAt: true } },
+        },
       },
       tasks: { orderBy: { sortOrder: "asc" } },
       assumptions: { orderBy: { createdAt: "asc" } },
@@ -40,6 +43,12 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
           content: d.content,
           createdAt: d.createdAt.toISOString(),
           ignored: d.ignored,
+          edits: d.edits.map((e) => ({
+            id: e.id,
+            oldContent: e.oldContent,
+            newContent: e.newContent,
+            createdAt: e.createdAt.toISOString(),
+          })),
           attachments: d.attachments.map((a) => ({
             id: a.id,
             filename: a.filename,
