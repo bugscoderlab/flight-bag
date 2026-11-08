@@ -322,37 +322,38 @@ export function Manifest({ todos: initial }: { todos: Row[] }) {
         setDropTarget(null);
       }}
     >
-      <span className="grip-slot">
-        <button
-          type="button"
-          className="grip"
-          aria-label={`Select or reorder ${t.title} — arrow keys reorder`}
-          title="Drag to reorder — click to select"
-          onClick={() => toggleSelect(t.id)}
-          onKeyDown={(e) => {
-            if (e.key === "ArrowUp") { e.preventDefault(); moveByKeyboard(t.id, -1); }
-            if (e.key === "ArrowDown") { e.preventDefault(); moveByKeyboard(t.id, 1); }
-          }}
-        >
-          <svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor" aria-hidden="true">
-            <circle cx="2.5" cy="3" r="1.5" /><circle cx="7.5" cy="3" r="1.5" />
-            <circle cx="2.5" cy="8" r="1.5" /><circle cx="7.5" cy="8" r="1.5" />
-            <circle cx="2.5" cy="13" r="1.5" /><circle cx="7.5" cy="13" r="1.5" />
-          </svg>
-        </button>
-        <input
-          type="checkbox"
-          checked={selected.has(t.id)}
-          onChange={() => toggleSelect(t.id)}
-          onClick={(e) => e.stopPropagation()}
-          title="Select for bulk actions"
-        />
-      </span>
-      <div className={t.paused ? "paused" : undefined} style={{ flex: 1, minWidth: 220 }}>
-        <Link href={`/todo/${t.id}`} style={{ textDecoration: "none", color: "inherit" }}>
-          <div className="title" style={{ cursor: "pointer" }}>{t.title}</div>
-        </Link>
-        <div className="tag-row">
+      <div className="headrow">
+        <span className="grip-slot">
+          <button
+            type="button"
+            className="grip"
+            aria-label={`Select or reorder ${t.title} — arrow keys reorder`}
+            title="Drag to reorder — click to select"
+            onClick={() => toggleSelect(t.id)}
+            onKeyDown={(e) => {
+              if (e.key === "ArrowUp") { e.preventDefault(); moveByKeyboard(t.id, -1); }
+              if (e.key === "ArrowDown") { e.preventDefault(); moveByKeyboard(t.id, 1); }
+            }}
+          >
+            <svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor" aria-hidden="true">
+              <circle cx="2.5" cy="3" r="1.5" /><circle cx="7.5" cy="3" r="1.5" />
+              <circle cx="2.5" cy="8" r="1.5" /><circle cx="7.5" cy="8" r="1.5" />
+              <circle cx="2.5" cy="13" r="1.5" /><circle cx="7.5" cy="13" r="1.5" />
+            </svg>
+          </button>
+          <input
+            type="checkbox"
+            checked={selected.has(t.id)}
+            onChange={() => toggleSelect(t.id)}
+            onClick={(e) => e.stopPropagation()}
+            title="Select for bulk actions"
+          />
+        </span>
+        <Link href={`/todo/${t.id}`} className={`title${t.paused ? " paused" : ""}`}>{t.title}</Link>
+        <span className={`stamp ${t.status}`}>{t.status}</span>
+        {t.hidden && <span className="stamp done">hidden</span>}
+      </div>
+      <div className="tag-row">
             {t.tags.map((tag) => (
               <span key={tag} className="tag">
                 {tag}
@@ -385,12 +386,11 @@ export function Manifest({ todos: initial }: { todos: Row[] }) {
                 ＋ tag
               </button>
             )}
-          </div>
-        <div className="muted" style={{ fontSize: 12 }}>
-          {t.openLegs} open leg{t.openLegs === 1 ? "" : "s"} · {t.dumps} dump{t.dumps === 1 ? "" : "s"}
         </div>
+      <div className="ticket-counts">
+        {t.openLegs} open leg{t.openLegs === 1 ? "" : "s"} · {t.dumps} dump{t.dumps === 1 ? "" : "s"}
       </div>
-      <div className="meta">
+      <div className="stub">
         {t.notams > 0 && <span className="notam-badge">{t.notams} NOTAM{t.notams === 1 ? "" : "s"}</span>}
         {t.etaDate && (
           <span className="caps mono">
@@ -403,16 +403,14 @@ export function Manifest({ todos: initial }: { todos: Row[] }) {
           </span>
         )}
         {planning.has(t.id) && <span className="caps" style={{ color: "var(--chart)" }}>Planning…</span>}
-        <span className={`stamp ${t.status}`}>{t.status}</span>
-        {t.hidden && <span className="stamp done">hidden</span>}
         {arming === t.id ? (
           <>
-            <span className="muted" style={{ fontSize: 12 }}>Scrap this flight?</span>
+            <span className="muted" style={{ fontSize: 12, marginLeft: "auto" }}>Scrap this flight?</span>
             <button className="notam" onClick={() => scrap(t.id)}>Confirm</button>
             <button className="ghost" onClick={() => setArming(null)}>Keep</button>
           </>
         ) : (
-          <button className="ghost" onClick={() => setArming(t.id)}>Scrap</button>
+          <button className="ghost scrap" onClick={() => setArming(t.id)}>Scrap</button>
         )}
       </div>
     </div>
@@ -523,7 +521,7 @@ export function Manifest({ todos: initial }: { todos: Row[] }) {
         <span className="caps muted">or focus a grip and use arrow keys</span>
       </div>
 
-      {visible.map(renderCard)}
+      <div className="dispatch-grid">{visible.map(renderCard)}</div>
 
       {hiddenList.length > 0 && (
         <>
@@ -539,7 +537,7 @@ export function Manifest({ todos: initial }: { todos: Row[] }) {
               {showHidden ? "select one and Unhide to bring it back" : "finished flights — kept, not deleted"}
             </span>
           </div>
-          {showHidden && hiddenList.map(renderCard)}
+          {showHidden && <div className="dispatch-grid">{hiddenList.map(renderCard)}</div>}
         </>
       )}
     </div>

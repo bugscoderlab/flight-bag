@@ -202,11 +202,20 @@ input[type="checkbox"]:checked::after {
 input[type="checkbox"]:focus-visible { outline: 2px solid var(--chart); outline-offset: 2px; }
 input[type="checkbox"]:disabled { opacity: 0.5; cursor: default; }
 
-/* Dispatch cards on the manifest */
+/* Dispatch cards on the manifest — flight-ticket cards in a grid.
+   Card order: headrow (grip · title · stamp) → tags (full width)
+   → counts (hugs the stub) → stub footer pinned to the card's bottom. */
+.dispatch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(265px, 1fr));
+  gap: 12px;
+}
 .dispatch {
   display: flex;
-  align-items: center;
-  gap: 16px;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px 0;
+  border-left: 2px dashed var(--hairline);
   cursor: grab;
   transition: transform 0.4s var(--settle), box-shadow 0.15s;
 }
@@ -217,11 +226,33 @@ input[type="checkbox"]:disabled { opacity: 0.5; cursor: default; }
 .dispatch.selected { border-color: var(--chart); box-shadow: 0 0 0 1px var(--chart); }
 .dispatch.hidden-flight { opacity: 0.55; }
 .dispatch.hidden-flight:hover { opacity: 1; }
-.dispatch .title { font-weight: 700; font-size: 15px; }
-.dispatch .meta { display: flex; gap: 16px; align-items: center; margin-left: auto; }
+.dispatch .headrow { display: flex; align-items: baseline; gap: 8px; }
+.dispatch .headrow .title {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: break-word;
+  color: inherit;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 15px;
+}
+.dispatch .headrow .title.paused { text-decoration: line-through; text-decoration-color: var(--hairline); }
+.dispatch .headrow .stamp { flex-shrink: 0; }
+.dispatch .ticket-counts { margin-top: auto; padding-top: 6px; color: var(--ink-soft); font-size: 12px; }
+.dispatch .stub {
+  margin: 0 -14px;
+  padding: 7px 14px;
+  background: var(--paper-deep);
+  border-top: 1px dashed var(--hairline);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+.dispatch .stub .scrap { margin-left: auto; }
 /* Drag grip — sits in the same slot as the checkbox and only appears on
    card hover or grip focus (Gmail pattern); clicking it selects the flight. */
-.dispatch .grip-slot { position: relative; width: 17px; height: 17px; flex-shrink: 0; margin-left: -6px; margin-right: -8px; }
+.dispatch .grip-slot { position: relative; width: 17px; height: 17px; flex-shrink: 0; }
 .dispatch .grip-slot > input[type="checkbox"] { position: absolute; inset: 0; margin: auto; transition: opacity 0.15s; }
 .dispatch .grip-slot .grip {
   position: absolute;
@@ -503,8 +534,7 @@ a.attach-name:hover { text-decoration: underline; }
   .rail a { padding: 6px 10px; border-left: 0; border-bottom: 2px solid transparent; }
   .rail a.active { border-bottom-color: var(--notam); background: transparent; }
   .main { padding: 18px 14px 48px; }
-  .dispatch { flex-wrap: wrap; }
-  .dispatch .meta { margin-left: 0; width: 100%; justify-content: flex-start; flex-wrap: wrap; gap: 8px; }
+  .dispatch-grid { grid-template-columns: 1fr; }
   .leg { flex-wrap: wrap; }
   .leg .hours { margin-left: 0; }
 }

@@ -20,14 +20,18 @@ as overrides first; the LLM only runs when you hit **Re-file flight plan**).
 
 ## What's inside
 
-- **Manifest** — every flight is a card: drag (or arrow-key the grip) into
-  priority order, bulk pause/hide/plan via the checkboxes, scrap with
-  confirm. Tags (`Todo.tags`, JSON string[]) categorize flights by project /
-  subproject: type them in the title box when filing (`API redesign
-  #client-acme #backend`) — `#` opens fuzzy suggestions from tags already on
-  the manifest (substring first, then subsequence — `#bkd` finds `backend`),
-  arrows/Enter/Tab to accept — and add/remove inline on the card (＋ tag).
-  Filter the manifest by clicking tag chips — multiple chips intersect.
+- **Manifest** — every flight is a **ticket card** in a responsive grid
+  (4+ columns on desktop, one on mobile): dashed tear-off edge, head row
+  with grip/status stamp, full-width tag line, leg/dump counts hugging the
+  paper-deep **stub** at the bottom (dates, NOTAMs, scrap). Drag (or
+  arrow-key the grip) into priority order, bulk pause/hide/plan via the
+  checkboxes. Tags (`Todo.tags`, JSON string[]) categorize flights by
+  project / subproject: type them in the title box when filing
+  (`API redesign #client-acme #backend`) — `#` opens fuzzy suggestions from
+  tags already on the manifest (substring first, then subsequence — `#bkd`
+  finds `backend`), arrows/Enter/Tab to accept — and add/remove inline on
+  the card (＋ tag). Filter the manifest by clicking tag chips — multiple
+  chips intersect.
 - **Mobile** — usable on a phone for dumping on the go: the rail collapses
   to a top bar, rows wrap instead of overflowing, touch targets grow to
   44px (grip always visible — no hover on touch), inputs render at 16px so
