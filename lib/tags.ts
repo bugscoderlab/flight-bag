@@ -44,3 +44,27 @@ export function parseInlineTags(text: string): { title: string; tags: string[] }
     .trim();
   return { title, tags };
 }
+
+// Fuzzy tag suggestions for the "#" autocomplete: substring matches rank
+// first (earlier occurrence + shorter tag wins), then subsequence matches
+// ("bkd" finds "backend"). Empty query matches everything (discovery).
+export function fuzzyTags(query: string, tags: string[], limit = 6): string[] {
+  const q = query.toLowerCase();
+  const scored: [number, string][] = [];
+  for (const tag of tags) {
+    const t = tag.toLowerCase();
+    let s: number;
+    if (!q) s = 0;
+    else if (t.includes(q)) s = 100 - t.indexOf(q) - t.length / 100;
+    else {
+      let i = 0;
+      for (const ch of t) if (i < q.length && ch === q[i]) i++;
+      s = i === q.length ? 10 - t.length / 100 : -1;
+    }
+    if (s >= 0) scored.push([s, tag]);
+  }
+  return scored
+    .sort((a, b) => b[0] - a[0] || a[1].localeCompare(b[1]))
+    .slice(0, limit)
+    .map((x) => x[1]);
+}

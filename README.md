@@ -24,8 +24,10 @@ as overrides first; the LLM only runs when you hit **Re-file flight plan**).
   priority order, bulk pause/hide/plan via the checkboxes, scrap with
   confirm. Tags (`Todo.tags`, JSON string[]) categorize flights by project /
   subproject: type them in the title box when filing (`API redesign
-  #client-acme #backend`), add/remove inline on the card (＋ tag), and filter
-  the manifest by clicking tag chips — multiple chips intersect.
+  #client-acme #backend`) — `#` opens fuzzy suggestions from tags already on
+  the manifest (substring first, then subsequence — `#bkd` finds `backend`),
+  arrows/Enter/Tab to accept — and add/remove inline on the card (＋ tag).
+  Filter the manifest by clicking tag chips — multiple chips intersect.
 - **Mobile** — usable on a phone for dumping on the go: the rail collapses
   to a top bar, rows wrap instead of overflowing, touch targets grow to
   44px (grip always visible — no hover on touch), inputs render at 16px so

@@ -1,9 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { parseTags } from "@/lib/tags";
+import { parseTags, fuzzyTags } from "@/lib/tags";
+
+// The "#" fragment immediately before the caret, if any — what the
+// autocomplete filters on. Same charset as the inline-tag parser.
+const FRAGMENT = /#([\p{L}\p{N}_\-./]*)$/u;
 
 type Row = {
   id: string;
@@ -27,6 +31,8 @@ export function Manifest({ todos: initial }: { todos: Row[] }) {
   const [tagFilter, setTagFilter] = useState<Set<string>>(new Set());
   const [tagEditing, setTagEditing] = useState<string | null>(null);
   const [tagDraft, setTagDraft] = useState("");
+  const [suggest, setSuggest] = useState<{ start: number; items: string[]; index: number } | null>(null);
+  const titleRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [arming, setArming] = useState<string | null>(null);
@@ -114,6 +120,50 @@ export function Manifest({ todos: initial }: { todos: Row[] }) {
       else n.add(tag);
       return n;
     });
+  }
+
+  // "#" autocomplete — recompute from the fragment before the caret on
+  // every keystroke; suggestions come from all tags on the manifest.
+  function updateSuggest(value: string, caret: number) {
+    const m = FRAGMENT.exec(value.slice(0, caret));
+    if (!m || allTags.length === 0) {
+      setSuggest(null);
+      return;
+    }
+    const items = fuzzyTags(m[1], allTags);
+    setSuggest(items.length ? { start: caret - m[1].length - 1, items, index: 0 } : null);
+  }
+
+  function acceptSuggestion(item: string) {
+    if (!suggest) return;
+    const caret = titleRef.current?.selectionStart ?? title.length;
+    const pos = suggest.start + item.length + 2; // "#tag "
+    setTitle(title.slice(0, suggest.start) + "#" + item + " " + title.slice(caret));
+    setSuggest(null);
+    requestAnimationFrame(() => {
+      titleRef.current?.focus();
+      titleRef.current?.setSelectionRange(pos, pos);
+    });
+  }
+
+  function onTitleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (!suggest) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSuggest({ ...suggest, index: (suggest.index + 1) % suggest.items.length });
+    }
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setSuggest({ ...suggest, index: (suggest.index - 1 + suggest.items.length) % suggest.items.length });
+    }
+    if (e.key === "Enter" || e.key === "Tab") {
+      e.preventDefault();
+      acceptSuggestion(suggest.items[suggest.index]);
+    }
+    if (e.key === "Escape") {
+      e.preventDefault();
+      setSuggest(null);
+    }
   }
 
   async function scrap(id: string) {
@@ -371,12 +421,37 @@ export function Manifest({ todos: initial }: { todos: Row[] }) {
   return (
     <div className="stack">
       <form onSubmit={create} className="row">
-        <input
-          type="text"
-          placeholder="File a new flight — title, #tag it by project…"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
+        <div className="title-wrap">
+          <input
+            ref={titleRef}
+            type="text"
+            placeholder="File a new flight — title, #tag it by project…"
+            value={title}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              updateSuggest(e.target.value, e.target.selectionStart ?? e.target.value.length);
+            }}
+            onKeyDown={onTitleKeyDown}
+          />
+          {suggest && (
+            <div className="tag-suggest" role="listbox" aria-label="Tag suggestions">
+              {suggest.items.map((tag, i) => (
+                <button
+                  key={tag}
+                  type="button"
+                  role="option"
+                  aria-selected={i === suggest.index}
+                  className={i === suggest.index ? "active" : ""}
+                  onMouseEnter={() => setSuggest({ ...suggest, index: i })}
+                  onClick={() => acceptSuggestion(tag)}
+                >
+                  <span className="hash">#</span>
+                  {tag}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <button type="submit">File</button>
       </form>
 
